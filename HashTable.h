@@ -77,4 +77,71 @@ private:
   unsigned long backingArraySize;
 };
 
-#include "HashTable.ipp"
+//You will need this so you can make a string to throw in
+// remove
+#include <string>
+
+template <class Key, class T>
+HashTable<Key,T>::HashTable(){
+	backingArray = new HashRecord();
+	numItems = 0;
+	numRemoved = 0;
+	backingArraySize = hashPrimes[0];
+}
+
+template <class Key, class T>
+HashTable<Key,T>::~HashTable() {
+  //TODO
+}
+
+template <class Key, class T>
+unsigned long HashTable<Key,T>::calcIndex(Key k){
+	if (keyExists(k)){
+		return hash(k)%backingArraySize;
+	}
+	
+}
+
+template <class Key, class T>
+void HashTable<Key,T>::add(Key k, T x){
+	backingArray[calcIndex(k)].x = x;
+	backingArray[calcIndex(k)].isNull = false;
+	numItems++;
+
+	if (numItems + numRemoved >= backingArraySize/2){
+		grow();
+	}
+}
+
+template <class Key, class T>
+void HashTable<Key,T>::remove(Key k){
+	backingArray[calcIndex(k)].isDel = true;
+	numItems--;
+	numRemoved++;
+}
+
+template <class Key, class T>
+T HashTable<Key,T>::find(Key k){
+	//return backingArray[calcIndex(k)];
+}
+
+template <class Key, class T>
+bool HashTable<Key,T>::keyExists(Key k){
+  //TODO
+  return false;
+}
+
+template <class Key, class T>
+unsigned long HashTable<Key,T>::size(){
+  return numItems;
+}
+
+template <class Key, class T>
+void HashTable<Key,T>::grow(){
+	int i = 0;
+	while (hashPrimes[i] < backingArraySize){
+		i++;
+	}
+
+}
+
