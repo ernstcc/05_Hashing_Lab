@@ -83,28 +83,40 @@ private:
 
 template <class Key, class T>
 HashTable<Key,T>::HashTable(){
-	backingArray = new HashRecord();
+	backingArraySize = hashPrimes[0];
+	backingArray = new HashRecord[backingArraySize];
 	numItems = 0;
 	numRemoved = 0;
-	backingArraySize = hashPrimes[0];
 }
 
 template <class Key, class T>
 HashTable<Key,T>::~HashTable() {
-  //TODO
-}
-
-template <class Key, class T>
-unsigned long HashTable<Key,T>::calcIndex(Key k){
-	if (keyExists(k)){
-		return hash(k)%backingArraySize;
-	}
 	
 }
 
 template <class Key, class T>
+unsigned long HashTable<Key,T>::calcIndex(Key k){
+	unsigned long index = hash(k) % backingArraySize;
+	
+	if (backingArray[index].isNull || backingArray[index].k == k){
+		return index;
+	}
+	else{
+		while (backingArray[index].isDel == false || backingArray[index].k != k){
+			if (backingArray[index].isNull || backingArray[index].k == k){
+				return index;
+			}
+			index = (index + 1) % backingArraySize;
+		}
+		return index;
+	}
+}
+
+template <class Key, class T>
 void HashTable<Key,T>::add(Key k, T x){
+	unsigned long index = calcIndex(k);
 	backingArray[calcIndex(k)].x = x;
+	backingArray[calcIndex(k)].k = k;
 	backingArray[calcIndex(k)].isNull = false;
 	numItems++;
 
@@ -115,20 +127,31 @@ void HashTable<Key,T>::add(Key k, T x){
 
 template <class Key, class T>
 void HashTable<Key,T>::remove(Key k){
+	unsigned long index = calcIndex(k);
 	backingArray[calcIndex(k)].isDel = true;
+	backingArray[calcIndex(k)].k = "";
 	numItems--;
 	numRemoved++;
 }
 
 template <class Key, class T>
 T HashTable<Key,T>::find(Key k){
-	//return backingArray[calcIndex(k)];
+	unsigned long index = calcIndex(k);
+
+	if (keyExists(k)){
+		return backingArray[index].x;
+	}
+	throw std::string("Invalid key input");
 }
 
 template <class Key, class T>
 bool HashTable<Key,T>::keyExists(Key k){
-  //TODO
-  return false;
+	unsigned long index = calcIndex(k);
+	std::string s = backingArray[calcIndex(k)].k;
+	if (backingArray[calcIndex(k)].k == k){
+		return true;
+	}
+	return false;
 }
 
 template <class Key, class T>
@@ -139,9 +162,25 @@ unsigned long HashTable<Key,T>::size(){
 template <class Key, class T>
 void HashTable<Key,T>::grow(){
 	int i = 0;
-	while (hashPrimes[i] < backingArraySize){
+	unsigned long newSize;
+	while (hashPrimes[i] <= backingArraySize){
 		i++;
 	}
+	newSize = hashPrimes[i];
 
+	HashRecord* temp = new HashRecord[newSize];
+
+	for (unsigned long x = 0; x < backingArraySize; x++){
+		if (backingArray[x].isNull == false && backingArray[x].isDel == false){
+			temp[x].k = backingArray[x].k;
+			temp[x].x = backingArray[x].x;
+			temp[x].isNull = false;
+		}
+	}
+
+	delete[] backingArray;
+	backingArraySize = newSize;
+	backingArray = temp;
+	numRemoved = 0;
 }
 
